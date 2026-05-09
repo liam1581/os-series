@@ -125,46 +125,9 @@ char keycode_to_ascii(uint16_t code) {
         case KEY_CODE_COMMA: return ',';
         case KEY_CODE_DOT: return '.';
         case KEY_CODE_DASH: return '-';
-
-
-        case KEY_CODE_SHIFT_LEFT: return 0x00;
-        case KEY_CODE_SHIFT_RIGHT: return 0x00;
-        case KEY_CODE_ALT_LEFT: return 0x00;
-        case KEY_CODE_ALT_RIGHT: return 0x00;
-        case KEY_CODE_CAPS_LOCK: return 0x00;
-        case KEY_CODE_TAB: return 0x00;
-        case KEY_CODE_ESCAPE: return 0x00;
-        case KEY_CODE_F1: return 0x00;
-        case KEY_CODE_F2: return 0x00;
-        case KEY_CODE_F3: return 0x00;
-        case KEY_CODE_F4: return 0x00;
-        case KEY_CODE_F5: return 0x00;
-        case KEY_CODE_F6: return 0x00;
-        case KEY_CODE_F7: return 0x00;
-        case KEY_CODE_F8: return 0x00;
-        case KEY_CODE_F9: return 0x00;
-        case KEY_CODE_F10: return 0x00;
-        case KEY_CODE_F11: return 0x00;
-        case KEY_CODE_F12: return 0x00;
-        case KEY_CODE_BACKSPACE: return 0x00;
-        case KEY_CODE_CTRL_LEFT: return 0x00;
-        case KEY_CODE_CTRL_RIGHT: return 0x00;
-        case KEY_CODE_ARROW_KEY_DOWN: return 0x00;
-        case KEY_CODE_ARROW_KEY_UP: return 0x00;
-        case KEY_CODE_ARROW_KEY_LEFT: return 0x00;
-        case KEY_CODE_ARROW_KEY_RIGHT: return 0x00;
-        case KEY_CODE_PRINT_SCREEN: return 0x00;
-        case KEY_CODE_SCROLL_LOCK: return 0x00;
-        case KEY_CODE_PAUSE: return 0x00;
-        case KEY_CODE_INSERT: return 0x00;
-        case KEY_CODE_POS1: return 0x00;
-        case KEY_CODE_PAGE_DOWN: return 0x00;
-        case KEY_CODE_DELETE: return 0x00;
-        case KEY_CODE_END: return 0x00;
-        case KEY_CODE_PAGE_UP: return 0x00;
     }    
     
-    return '?';
+    return 0x00;
 }
 char keycode_to_ascii_ext(uint16_t code, bool shift_pressed, bool altgr_pressed) {
     switch (code) {
@@ -219,43 +182,6 @@ char keycode_to_ascii_ext(uint16_t code, bool shift_pressed, bool altgr_pressed)
         case KEY_CODE_COMMA: return shift_pressed ? ';' : ',';
         case KEY_CODE_DOT: return shift_pressed ? ':' : '.';
         case KEY_CODE_DASH: return shift_pressed ? '_' : '-';
-
-
-        case KEY_CODE_SHIFT_LEFT: return 0x00;
-        case KEY_CODE_SHIFT_RIGHT: return 0x00;
-        case KEY_CODE_ALT_LEFT: return 0x00;
-        case KEY_CODE_ALT_RIGHT: return 0x00;
-        case KEY_CODE_CAPS_LOCK: return 0x00;
-        case KEY_CODE_TAB: return 0x00;
-        case KEY_CODE_ESCAPE: return 0x00;
-        case KEY_CODE_F1: return 0x00;
-        case KEY_CODE_F2: return 0x00;
-        case KEY_CODE_F3: return 0x00;
-        case KEY_CODE_F4: return 0x00;
-        case KEY_CODE_F5: return 0x00;
-        case KEY_CODE_F6: return 0x00;
-        case KEY_CODE_F7: return 0x00;
-        case KEY_CODE_F8: return 0x00;
-        case KEY_CODE_F9: return 0x00;
-        case KEY_CODE_F10: return 0x00;
-        case KEY_CODE_F11: return 0x00;
-        case KEY_CODE_F12: return 0x00;
-        case KEY_CODE_BACKSPACE: return 0x00;
-        case KEY_CODE_CTRL_LEFT: return 0x00;
-        case KEY_CODE_CTRL_RIGHT: return 0x00;
-        case KEY_CODE_ARROW_KEY_DOWN: return 0x00;
-        case KEY_CODE_ARROW_KEY_UP: return 0x00;
-        case KEY_CODE_ARROW_KEY_LEFT: return 0x00;
-        case KEY_CODE_ARROW_KEY_RIGHT: return 0x00;
-        case KEY_CODE_PRINT_SCREEN: return 0x00;
-        case KEY_CODE_SCROLL_LOCK: return 0x00;
-        case KEY_CODE_PAUSE: return 0x00;
-        case KEY_CODE_INSERT: return 0x00;
-        case KEY_CODE_POS1: return 0x00;
-        case KEY_CODE_PAGE_DOWN: return 0x00;
-        case KEY_CODE_DELETE: return 0x00;
-        case KEY_CODE_END: return 0x00;
-        case KEY_CODE_PAGE_UP: return 0x00;
     }    
     
     return 0x00;

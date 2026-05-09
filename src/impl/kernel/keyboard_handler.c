@@ -99,7 +99,6 @@ void handle_input(struct KeyboardEvent event) {
                 else if (keyboard_buffer_length > 0) {
                     print_set_color(PRINT_COLOR_RED, PRINT_COLOR_BLACK);
                     print("Unknown command: ");
-                    print_set_color(PRINT_COLOR_RED, PRINT_COLOR_DARK_GRAY);
                     print(keyboard_buffer);
                     print_set_color(PRINT_COLOR_WHITE, PRINT_COLOR_BLACK);
                     printc('\n');
