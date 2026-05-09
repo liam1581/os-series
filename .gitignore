@@ -1,0 +1,8 @@
+/build/
+
+/dist/*
+!/dist/x86_64/
+/dist/x86_64/*
+!/dist/x86_64/kernel.iso
+
+/targets/x86_64/disk.img

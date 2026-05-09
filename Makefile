@@ -1,0 +1,97 @@
+CC := x86_64-elf-gcc
+LD := x86_64-elf-ld
+
+kernel_source_files := $(shell find src/impl/kernel -name *.c)
+kernel_object_files := $(patsubst src/impl/kernel/%.c, build/kernel/%.o, $(kernel_source_files))
+
+x86_64_c_source_files := $(shell find src/impl/x86_64 -name *.c)
+x86_64_c_object_files := $(patsubst src/impl/x86_64/%.c, build/x86_64/%.o, $(x86_64_c_source_files))
+
+x86_64_asm_source_files := $(shell find src/impl/x86_64 -name *.asm)
+x86_64_asm_object_files := $(patsubst src/impl/x86_64/%.asm, build/x86_64/%.o, $(x86_64_asm_source_files))
+
+libs_c_source_files := $(shell find src/libs/source -name *.c)
+libs_c_object_files := $(patsubst src/libs/source/%.c, build/libs/%.o, $(libs_c_source_files))
+
+libs_asm_source_files := $(shell find src/libs/source -name *.asm)
+libs_asm_object_files := $(patsubst src/libs/source/%.asm, build/libs/%.o, $(libs_asm_source_files))
+
+program_asm_source_files := $(shell find src/programs -name *.asm)
+program_lse_files := $(patsubst src/programs/%.asm, targets/x86_64/iso/data/%.lse, $(program_asm_source_files))
+
+program_c_source_files := $(shell find src/programs -name *.c)
+program_c_lse_files := $(patsubst src/programs/%.c, targets/x86_64/iso/data/%.lse, $(program_c_source_files))
+
+x86_64_object_files := $(x86_64_c_object_files) $(x86_64_asm_object_files)
+libs_object_files := $(libs_c_object_files) $(libs_asm_object_files)
+
+INCLUDES := -I src/libs/headers -I src/impl/kernel/headers
+DEFINES := -DKEYBOARD_QWERTZ -DDEBUG
+
+build/kernel/%.o: src/impl/kernel/%.c
+	mkdir -p $(dir $@)
+	$(CC) $(DEFINES) -c $(INCLUDES) -ffreestanding $(patsubst build/kernel/%.o, src/impl/kernel/%.c, $@) -o $@
+
+build/x86_64/%.o: src/impl/x86_64/%.c
+	mkdir -p $(dir $@)
+	$(CC) $(DEFINES) -c $(INCLUDES) -ffreestanding $(patsubst build/x86_64/%.o, src/impl/x86_64/%.c, $@) -o $@
+
+build/x86_64/%.o: src/impl/x86_64/%.asm
+	mkdir -p $(dir $@)
+	nasm -f elf64 $(patsubst build/x86_64/%.o, src/impl/x86_64/%.asm, $@) -o $@
+
+build/libs/%.o: src/libs/source/%.c
+	mkdir -p $(dir $@)
+	$(CC) $(DEFINES) -c $(INCLUDES) -ffreestanding $(patsubst build/libs/%.o, src/libs/source/%.c, $@) -o $@
+
+build/libs/%.o: src/libs/source/%.asm
+	mkdir -p $(dir $@)
+	nasm -f elf64 $(patsubst build/libs/%.o, src/libs/source/%.asm, $@) -o $@
+
+targets/x86_64/iso/data/%.lse: src/programs/%.asm
+	mkdir -p $(dir $@)
+	mkdir -p build/programs
+	$(eval STEM := $*)
+	nasm -f bin $< -o build/programs/$(STEM).bin
+	python3 -c "import sys; sys.stdout.buffer.write(bytes([0xFF,0x4C,0x53,0x4F,0x53,0x46,0x48,0x00,0x00,0x00,0x03,0x00,0x00,0x00,0x00,0xFF]))" > $@
+	cat build/programs/$(STEM).bin >> $@
+
+targets/x86_64/iso/data/%.lse: src/programs/%.c
+	mkdir -p $(dir $@)
+	mkdir -p build/programs
+	$(eval STEM := $*)
+	$(CC) $(DEFINES) $(INCLUDES) -ffreestanding -nostdlib -fno-pie -fno-pic -fcf-protection=none -c $(patsubst targets/x86_64/iso/data/%.lse, src/programs/%.c, $@) -o build/programs/$(STEM).o
+	$(LD) -T src/programs/program.ld -o build/programs/$(STEM).elf build/programs/$(STEM).o
+	x86_64-elf-objcopy -O binary build/programs/$(STEM).elf build/programs/$(STEM).bin
+	python3 -c "import sys; sys.stdout.buffer.write(bytes([0xFF,0x4C,0x53,0x4F,0x53,0x46,0x48,0x00,0x00,0x00,0x03,0x00,0x00,0x00,0x00,0xFF]))" > $@
+	cat build/programs/$(STEM).bin >> $@
+
+.PHONY: build clean run build_clean
+
+build: $(kernel_object_files) $(x86_64_object_files) $(libs_object_files) $(program_lse_files) $(program_c_lse_files)
+	mkdir -p dist/x86_64
+	$(LD) -n -o dist/x86_64/kernel.bin -T targets/x86_64/linker.ld $(kernel_object_files) $(x86_64_object_files) $(libs_object_files)
+	cp dist/x86_64/kernel.bin targets/x86_64/iso/boot/kernel.bin
+	grub-mkrescue /usr/lib/grub/i386-pc -o dist/x86_64/kernel.iso targets/x86_64/iso
+
+clean:
+	rm -rf build dist
+	rm -rf targets/x86_64/iso/data/*.lse targets/x86_64/iso/boot/kernel.bin
+
+build_clean:
+	$(MAKE) clean
+	$(MAKE) build
+
+run:
+	@if [ ! -f targets/x86_64/disk.img ]; then \
+		echo "Creating virtual disk..."; \
+		dd if=/dev/zero of=targets/x86_64/disk.img bs=1M count=8096; \
+		mkfs.fat -F 32 targets/x86_64/disk.img; \
+	fi
+	qemu-system-x86_64 \
+		-drive file=targets/x86_64/disk.img,format=raw,if=ide,index=0,media=disk \
+		-drive file=dist/x86_64/kernel.iso,format=raw,if=ide,index=1,media=cdrom \
+		-boot d \
+		-serial tcp:127.0.0.1:1234,server &
+	sleep 1
+	putty.exe -raw 127.0.0.1 -P 1234

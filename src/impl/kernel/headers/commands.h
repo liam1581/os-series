@@ -1,0 +1,13 @@
+#pragma once
+
+void cmd_echo(const char* input);
+void cmd_help();
+void cmd_cls();
+void cmd_restart();
+void cmd_shutdown();
+void cmd_serial_init(const char* input);
+void cmd_serial_write(const char* input);
+void cmd_atapi_init();
+void cmd_ls();
+void cmd_cat(const char* input);
+void cmd_run(const char* input);
