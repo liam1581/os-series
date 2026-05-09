@@ -1,5 +1,7 @@
-#include "x86_64/ata.h"
+#include "drivers/ata.h"
 #include "x86_64/port.h"
+
+#include "debug.h"
 
 #define ATA_PRIMARY_DATA         0x1F0
 #define ATA_PRIMARY_ERROR        0x1F1
@@ -30,14 +32,16 @@ static bool ata_wait_bsy() {
     for (uint32_t i = 0; i < ATA_TIMEOUT; i++) {
         if (!(port_inb(ATA_PRIMARY_STATUS) & ATA_STATUS_BSY)) return true;
     }
-    return false; // timed out
+    serial_write("ata::ata_wait_bsy::timed out");
+    return false;
 }
 
 static bool ata_wait_drq() {
     for (uint32_t i = 0; i < ATA_TIMEOUT; i++) {
         if (port_inb(ATA_PRIMARY_STATUS) & ATA_STATUS_DRQ) return true;
     }
-    return false; // timed out
+    serial_write("ata::ata_wait_drw::timed out");
+    return false;
 }
 
 static bool ata_check_error() {

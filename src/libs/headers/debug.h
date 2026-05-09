@@ -1,5 +1,5 @@
 #pragma once
-#include "serial.h"
+#include "drivers/serial.h"
 
 #ifdef DEBUG
     #define DBG_PRINTS(str) serial_write(str)

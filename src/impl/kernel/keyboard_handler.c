@@ -84,6 +84,16 @@ void handle_input(struct KeyboardEvent event) {
                     cmd_cat(keyboard_buffer);
                 } else if (starts_with(keyboard_buffer, "run ")) {
                     cmd_run(keyboard_buffer);
+                } else if (starts_with(keyboard_buffer, "cd ")) {
+                    cmd_cd(keyboard_buffer);
+                }
+
+                else if (strcmp(keyboard_buffer, "fat.init") == 0) {
+                    cmd_fat_init();
+                } else if (strcmp(keyboard_buffer, "fat.ls") == 0) {
+                    cmd_fat_ls();
+                } else if (starts_with(keyboard_buffer, "fat.cat ")) {
+                    cmd_fat_cat(keyboard_buffer);
                 }
             
                 else if (keyboard_buffer_length > 0) {

@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "x86_64/serial.h"
+#include "drivers/serial.h"
 #include "x86_64/port.h"
 
 // COM1 ports

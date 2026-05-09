@@ -11,3 +11,7 @@ void cmd_atapi_init();
 void cmd_ls();
 void cmd_cat(const char* input);
 void cmd_run(const char* input);
+void cmd_cd(const char* input);
+void cmd_fat_init();
+void cmd_fat_ls();
+void cmd_fat_cat(const char* input);

@@ -1,5 +1,7 @@
-#include "x86_64/atapi.h"
+#include "drivers/atapi.h"
 #include "x86_64/port.h"
+
+#include "debug.h"
 
 // Primary IDE channel
 #define ATA_PRIMARY_DATA         0x1F0
@@ -77,12 +79,21 @@ static void use_secondary() {
     port_alt_status   = ATA_SECONDARY_ALT_STATUS;
 }
 
-static void ata_wait_bsy() {
-    while (port_inb(port_status) & ATA_STATUS_BSY);
+#define ATAPI_TIMEOUT 100000
+static uint8_t selected_drive = 0xA0;
+
+static bool ata_wait_bsy() {
+    for (uint32_t i = 0; i < ATAPI_TIMEOUT; i++) {
+        if (!(port_inb(port_status) & ATA_STATUS_BSY)) return true;
+    }
+    return false;
 }
 
-static void ata_wait_drq() {
-    while (!(port_inb(port_status) & ATA_STATUS_DRQ));
+static bool ata_wait_drq() {
+    for (uint32_t i = 0; i < ATAPI_TIMEOUT; i++) {
+        if (port_inb(port_status) & ATA_STATUS_DRQ) return true;
+    }
+    return false;
 }
 
 static bool ata_check_error() {
@@ -92,44 +103,34 @@ static bool ata_check_error() {
 // Try to detect and init an ATAPI drive on the currently selected channel/drive
 // drive_select: 0xA0 = master, 0xB0 = slave
 static bool try_init_drive(uint8_t drive_select) {
-    // Select drive
     port_outb(port_drive_select, drive_select);
-
-    // Give the drive time to respond
     for (int i = 0; i < 15; i++) port_wait();
 
-    // Check if anything is there at all — 0xFF means no drive
     uint8_t status = port_inb(port_status);
     if (status == 0xFF || status == 0x00) return false;
 
-    // Reset
     port_outb(port_alt_status, 0x04);
     for (int i = 0; i < 5; i++) port_wait();
     port_outb(port_alt_status, 0x00);
     for (int i = 0; i < 5; i++) port_wait();
 
-    ata_wait_bsy();
+    if (!ata_wait_bsy()) return false;
 
-    // Check ATAPI signature in LBA mid/high — ATAPI drives return 0x14/0xEB
     uint8_t mid = port_inb(port_lba_mid);
     uint8_t hi  = port_inb(port_lba_high);
-
     if (mid != ATAPI_SIG_MID || hi != ATAPI_SIG_HI) return false;
 
-    // Send IDENTIFY PACKET command to confirm
     port_outb(port_command, ATA_CMD_IDENTIFY_PACKET);
     for (int i = 0; i < 5; i++) port_wait();
 
-    ata_wait_bsy();
-
+    if (!ata_wait_bsy()) return false;
     if (port_inb(port_status) == 0) return false;
-    if (ata_check_error())          return false;
+    if (ata_check_error()) return false;
+    if (!ata_wait_drq()) return false;
 
-    ata_wait_drq();
-
-    // Read and discard identify data
     for (int i = 0; i < 256; i++) port_inw(port_data);
 
+    selected_drive = drive_select; // ← remember which drive worked
     return true;
 }
 
@@ -148,30 +149,23 @@ bool atapi_init() {
 }
 
 bool atapi_read_sector(uint32_t lba, uint8_t* buffer) {
-    port_outb(port_drive_select, 0xA0);
+    port_outb(port_drive_select, selected_drive); // ← use the right drive
     port_outb(port_error,        0x00);
-    port_outb(port_lba_mid,      0x00);   // byte count low
-    port_outb(port_lba_high,     0x08);   // byte count high (0x0800 = 2048)
+    port_outb(port_lba_mid,      0x00);
+    port_outb(port_lba_high,     0x08);
     port_outb(port_command,      ATA_CMD_PACKET);
 
-    ata_wait_bsy();
-    ata_wait_drq();
-    if (ata_check_error()) return false;
+    if (!ata_wait_bsy()) { serial_write("atapi: BSY timeout\r\n"); return false; }
+    if (!ata_wait_drq()) { serial_write("atapi: DRQ timeout\r\n"); return false; }
+    if (ata_check_error()) { serial_write("atapi: error flag set\r\n"); return false; }
 
-    // 12-byte ATAPI READ(12) packet
     uint8_t packet[12] = {
-        ATAPI_CMD_READ12,
-        0x00,
+        ATAPI_CMD_READ12, 0x00,
         (uint8_t)((lba >> 24) & 0xFF),
         (uint8_t)((lba >> 16) & 0xFF),
         (uint8_t)((lba >> 8)  & 0xFF),
         (uint8_t)((lba >> 0)  & 0xFF),
-        0x00,
-        0x00,
-        0x00,
-        0x01,   // read 1 sector
-        0x00,
-        0x00,
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
     };
 
     for (int i = 0; i < 6; i++) {
@@ -179,15 +173,14 @@ bool atapi_read_sector(uint32_t lba, uint8_t* buffer) {
         port_outw(port_data, word);
     }
 
-    ata_wait_bsy();
-    ata_wait_drq();
-    if (ata_check_error()) return false;
+    if (!ata_wait_bsy()) { serial_write("atapi: BSY2 timeout\r\n"); return false; }
+    if (!ata_wait_drq()) { serial_write("atapi: DRQ2 timeout\r\n"); return false; }
+    if (ata_check_error()) { serial_write("atapi: error2 flag set\r\n"); return false; }
 
     for (int i = 0; i < 1024; i++) {
         uint16_t word = port_inw(port_data);
         buffer[i * 2]     = (uint8_t)(word & 0xFF);
         buffer[i * 2 + 1] = (uint8_t)(word >> 8);
     }
-
     return true;
 }

@@ -1,5 +1,5 @@
-#include "x86_64/fat32.h"
-#include "x86_64/ata.h"
+#include "drivers/fat32.h"
+#include "drivers/ata.h"
 
 // ─── BPB (BIOS Parameter Block) ───────────────────────────────────────────────
 

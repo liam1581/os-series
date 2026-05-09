@@ -88,9 +88,16 @@ run:
 		dd if=/dev/zero of=targets/x86_64/disk.img bs=1M count=8096; \
 		mkfs.fat -F 32 targets/x86_64/disk.img; \
 	fi
+	@if [ -d targets/x86_64/disk ] && [ "$$(ls -A targets/x86_64/disk 2>/dev/null)" ]; then \
+		echo "Copying disk files to image..."; \
+		mkdir -p /tmp/os-disk-mount; \
+		sudo mount -o loop targets/x86_64/disk.img /tmp/os-disk-mount; \
+		sudo cp -r targets/x86_64/disk/. /tmp/os-disk-mount/; \
+		sudo umount /tmp/os-disk-mount; \
+	fi
 	qemu-system-x86_64 \
 		-drive file=targets/x86_64/disk.img,format=raw,if=ide,index=0,media=disk \
-		-drive file=dist/x86_64/kernel.iso,format=raw,if=ide,index=1,media=cdrom \
+		-drive file=dist/x86_64/kernel.iso,format=raw,if=ide,index=2,media=cdrom \
 		-boot d \
 		-serial tcp:127.0.0.1:1234,server &
 	sleep 1

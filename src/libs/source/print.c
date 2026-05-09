@@ -1,5 +1,4 @@
 #include "print.h"
-#include "x86_64/serial.h"
 #include "x86_64/port.h"
 
 #define VGA_CTRL_PORT 0x3D4

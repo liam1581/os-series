@@ -1,8 +1,8 @@
 #include "lse.h"
-#include "x86_64/iso9660.h"
+#include "drivers/iso9660.h"
 #include "kapi.h"
 #include "print.h"
-#include "x86_64/serial.h"
+#include "drivers/serial.h"
 #include "string.h"
 //#include "memory.h"
 

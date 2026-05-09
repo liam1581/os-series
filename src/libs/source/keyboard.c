@@ -2,7 +2,7 @@
 #include "bool.h"
 #include "keyboard.h"
 #include "x86_64/idt.h"
-#include "x86_64/ps2.h"
+#include "drivers/ps2.h"
 
 #define KEYBOARD_EXTENDED_SCAN_CODE 0xE0
 

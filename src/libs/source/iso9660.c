@@ -1,5 +1,5 @@
-#include "x86_64/iso9660.h"
-#include "x86_64/atapi.h"
+#include "drivers/iso9660.h"
+#include "drivers/atapi.h"
 
 // ISO 9660 sector offsets
 #define ISO9660_SYSTEM_AREA_SECTORS  16  // first 16 sectors are system area
@@ -55,19 +55,26 @@ static bool strcmp_iso(const char* a, const char* b) {
 }
 
 bool iso9660_init() {
-    // Read the Primary Volume Descriptor at sector 16
-    if (!atapi_read_sector(ISO9660_PVD_SECTOR, sector_buffer)) return false;
+    if (!atapi_read_sector(ISO9660_PVD_SECTOR, sector_buffer)) {
+        return false;
+    }
 
-    // Check identifier — should be "CD001"
+    for (int i = 0; i < 8; i++) {
+        uint8_t b = sector_buffer[i];
+    }
+
     if (sector_buffer[1] != 'C' ||
         sector_buffer[2] != 'D' ||
         sector_buffer[3] != '0' ||
         sector_buffer[4] != '0' ||
-        sector_buffer[5] != '1') return false;
+        sector_buffer[5] != '1') {
+        return false;
+    }
 
-    if (sector_buffer[0] != ISO9660_VD_PRIMARY) return false;
+    if (sector_buffer[0] != ISO9660_VD_PRIMARY) {
+        return false;
+    }
 
-    // Root directory record is at offset 156 in the PVD, 34 bytes long
     const uint8_t* root = sector_buffer + 156;
     root_lba  = read_le32(root + 2);
     root_size = read_le32(root + 10);
