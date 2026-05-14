@@ -4,5 +4,5 @@
 
 LSE_ENTRY void main(KernelAPI* api) {
     STR(msg, "Hello, World!");
-    api->println(msg);
+    api->println("Hello");
 }

@@ -5,6 +5,7 @@
 #include "print.h"
 #include "timer.h"
 #include "lse.h"
+#include "debug.h"
 #include "drivers/power.h"
 #include "drivers/serial.h"
 #include "drivers/atapi.h"
@@ -144,7 +145,7 @@ void cmd_serial_init(const char* input) {
     print_uint64_dec(baud);
     println(" baud.");
     print_set_color(PRINT_COLOR_WHITE, PRINT_COLOR_BLACK);
-    serial_writeln("OS CONNECTED");
+    serial_write("OS CONNECTED");
 }
 
 void cmd_serial_write(const char* input) {
@@ -180,21 +181,23 @@ void cmd_atapi_init() {
     if (!atapi_init()) {
         print_set_color(PRINT_COLOR_RED, PRINT_COLOR_BLACK);
         println("No CD drive found!");
+        DBG_PRINTLNS("NO CD DRIVE FOUND!");
         print_set_color(PRINT_COLOR_WHITE, PRINT_COLOR_BLACK);
         return;
     } else {
         print_set_color(PRINT_COLOR_YELLOW, PRINT_COLOR_BLACK);
-        println("ATAPI CD drive initialized successfully.");
+        DBG_PRINTLNS("ATAPI CD drive initialized successfully.");
         print_set_color(PRINT_COLOR_WHITE, PRINT_COLOR_BLACK);
     }
     if (!iso9660_init()) {
         print_set_color(PRINT_COLOR_RED, PRINT_COLOR_BLACK);
         println("Failed to read ISO filesystem!");
+        DBG_PRINTLNS("FAILED TO READ ISO FILESYSTEM!");
         print_set_color(PRINT_COLOR_WHITE, PRINT_COLOR_BLACK);
         return;
     } else {
         print_set_color(PRINT_COLOR_YELLOW, PRINT_COLOR_BLACK);
-        println("ISO9660 filesystem initialized successfully.");
+        DBG_PRINTLNS("ISO9660 filesystem initialized successfully.");
         print_set_color(PRINT_COLOR_WHITE, PRINT_COLOR_BLACK);
     }
     cdInitialized = true;
@@ -350,18 +353,18 @@ void cmd_run(const char* input) {
             char path[2048];
             strcat_s(path, current_dir, relative_filename);
 
-            int execStatus = lse_exec(path);
+            int exec = lse_exec(path);
 
-            if (lse_exec(path) != 0) {
+            if (exec != 1) {
                 print_set_color(PRINT_COLOR_RED, PRINT_COLOR_BLACK);
                 println("run: failed to load or execute program:");
             }
 
-            if (execStatus == -1) {
+            if (exec == -1) {
                 println("     File not found!");
-            } else if (execStatus == -2) {
+            } else if (exec == -2) {
                 println("     Invalid header size!");
-            } else if (execStatus == -3) {
+            } else if (exec == -3) {
                 println("     Invalid header!");
             }
             print_set_color(PRINT_COLOR_WHITE, PRINT_COLOR_BLACK);
@@ -452,18 +455,20 @@ void cmd_fat_init() {
     if (!ata_init()) {
         print_set_color(PRINT_COLOR_RED, PRINT_COLOR_BLACK);
         println("No ATA disk found!");
+        DBG_PRINTLNS("NO ATA DISK FOUND!");
         return;
     } else {
         print_set_color(PRINT_COLOR_YELLOW, PRINT_COLOR_BLACK);
-        println("ATA disk found!");
+        DBG_PRINTLNS("ATA disk found!");
     }
     if (!fat32_init()) {
         print_set_color(PRINT_COLOR_RED, PRINT_COLOR_BLACK);
         println("FAT32 init failed!");
+        DBG_PRINTLNS("FAT32 INIT FAILED!");
         return;
     } else {
         print_set_color(PRINT_COLOR_YELLOW, PRINT_COLOR_BLACK);
-        println("FAT32 disk ready!");
+        DBG_PRINTLNS("FAT32 disk ready!");
     }
     print_set_color(PRINT_COLOR_WHITE, PRINT_COLOR_BLACK);
     fatInitialized = true;
