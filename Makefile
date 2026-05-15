@@ -101,4 +101,4 @@ run:
 		-boot d \
 		-serial tcp:127.0.0.1:1234,server &
 	sleep 1
-	putty.exe -raw 127.0.0.1 -P 1234
+	/mnt/c/Program\ Files/PuTTY/putty.exe -raw 127.0.0.1 -P 1234
