@@ -33,6 +33,8 @@ void print_uint64_hex(uint64_t value);
 void print_uint64_bin(uint64_t value);
 void delete_last_char();
 
+void printf(char* fmt, ...);
+
 void move_cursor(int row, int col);
 void move_cursor_up();
 void move_cursor_down();

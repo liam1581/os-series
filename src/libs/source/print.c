@@ -1,6 +1,7 @@
 #include "print.h"
 #include "bool.h"
 #include "x86_64/port.h"
+#include "x86_64/x86.h"
 
 #define VGA_CTRL_PORT 0x3D4
 #define VGA_DATA_PORT 0x3D5
