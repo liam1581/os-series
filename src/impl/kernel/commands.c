@@ -25,7 +25,6 @@ void cmd_echo(const char* input) {
     if (args[0] != '"') {
         print_set_color(PRINT_COLOR_RED, PRINT_COLOR_BLACK);
         println("echo: expected a quoted string, e.g. echo \"hello\"");
-        
         print_set_color(PRINT_COLOR_WHITE, PRINT_COLOR_BLACK);
         return;
     }

@@ -17,10 +17,10 @@ libs_asm_source_files := $(shell find src/libs/source -name *.asm)
 libs_asm_object_files := $(patsubst src/libs/source/%.asm, build/libs/%.o, $(libs_asm_source_files))
 
 program_asm_source_files := $(shell find src/programs -name *.asm)
-program_lse_files := $(patsubst src/programs/%.asm, targets/x86_64/iso/data/%.lse, $(program_asm_source_files))
+program_lse_files := $(patsubst src/programs/%.asm, targets/x86_64/iso/data/%.lhe, $(program_asm_source_files))
 
 program_c_source_files := $(shell find src/programs -name *.c)
-program_c_lse_files := $(patsubst src/programs/%.c, targets/x86_64/iso/data/%.lse, $(program_c_source_files))
+program_c_lse_files := $(patsubst src/programs/%.c, targets/x86_64/iso/data/%.lhe, $(program_c_source_files))
 
 x86_64_object_files := $(x86_64_c_object_files) $(x86_64_asm_object_files)
 libs_object_files := $(libs_c_object_files) $(libs_asm_object_files)
@@ -48,7 +48,7 @@ build/libs/%.o: src/libs/source/%.asm
 	mkdir -p $(dir $@)
 	nasm -f elf64 $(patsubst build/libs/%.o, src/libs/source/%.asm, $@) -o $@
 
-targets/x86_64/iso/data/%.lse: src/programs/%.asm
+targets/x86_64/iso/data/%.lhe: src/programs/%.asm
 	mkdir -p $(dir $@)
 	mkdir -p build/programs
 	$(eval STEM := $*)
@@ -56,11 +56,11 @@ targets/x86_64/iso/data/%.lse: src/programs/%.asm
 	python3 -c "import sys; sys.stdout.buffer.write(bytes([0xFF,0x4C,0x53,0x4F,0x53,0x46,0x48,0x00,0x00,0x00,0x03,0x00,0x00,0x00,0x00,0xFF]))" > $@
 	cat build/programs/$(STEM).bin >> $@
 
-targets/x86_64/iso/data/%.lse: src/programs/%.c
+targets/x86_64/iso/data/%.lhe: src/programs/%.c
 	mkdir -p $(dir $@)
 	mkdir -p build/programs
 	$(eval STEM := $*)
-	$(CC) $(DEFINES) $(INCLUDES) -ffreestanding -nostdlib -fno-pie -fno-pic -fcf-protection=none -c $(patsubst targets/x86_64/iso/data/%.lse, src/programs/%.c, $@) -o build/programs/$(STEM).o
+	$(CC) $(DEFINES) $(INCLUDES) -ffreestanding -nostdlib -fno-pie -fno-pic -fcf-protection=none -c $(patsubst targets/x86_64/iso/data/%.lhe, src/programs/%.c, $@) -o build/programs/$(STEM).o
 	$(LD) -T src/programs/program.ld -o build/programs/$(STEM).elf build/programs/$(STEM).o
 	x86_64-elf-objcopy -O binary build/programs/$(STEM).elf build/programs/$(STEM).bin
 	python3 -c "import sys; sys.stdout.buffer.write(bytes([0xFF,0x4C,0x53,0x4F,0x53,0x46,0x48,0x00,0x00,0x00,0x03,0x00,0x00,0x00,0x00,0xFF]))" > $@
@@ -76,7 +76,7 @@ build: $(kernel_object_files) $(x86_64_object_files) $(libs_object_files) $(prog
 
 clean:
 	rm -rf build dist
-	rm -rf targets/x86_64/iso/data/*.lse targets/x86_64/iso/boot/kernel.bin
+	rm -rf targets/x86_64/iso/data/*.lhe targets/x86_64/iso/boot/kernel.bin
 
 build_clean:
 	$(MAKE) clean
